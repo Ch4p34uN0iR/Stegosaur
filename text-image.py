@@ -39,7 +39,7 @@ def write_image(txt_name="text.txt", image_name="image.png", repeat=True):
             new_rgba = []
             for channel in rgba:
 
-                # Do we have more text to write
+                # Do we have more text to write?
                 try:
                     txt_temp = next(bin_gen)
                 except StopIteration:
@@ -57,6 +57,53 @@ def write_image(txt_name="text.txt", image_name="image.png", repeat=True):
             image_file.putpixel((x, y), new_rgba)
 
     image_file.save(image_name)
+
+
+def read_image(image_name="image.png"):
+
+    from sys import exit
+
+    # Saves needless importing in programs that already use PIL
+    try:
+        Image
+    except NameError:
+
+        try:
+            from PIL import Image
+        except ModuleNotFoundError:
+            exit("Please install PIL or Pillow.")
+
+    image_file = Image.open(image_name).convert("RGBA")
+
+    im_width, im_height = image_file.size
+    txt_bin = []
+    txt_chrs = []
+    temp = 32
+
+    for x in range(im_width):
+        for y in range(im_height):
+
+            # Get RGBA values for the pixel
+            rgba = image_file.getpixel((x, y))
+
+            for channel in rgba:
+                txt_bin.append(format(channel, "08b")[-2:])
+
+            while len(txt_bin) >= 3:
+
+                temp = int("".join(txt_bin[:4]), 2)
+                del txt_bin[:4]
+
+                # Check if it's a valid character.
+                if not 32 < temp < 127:
+                    break
+
+                txt_chrs.append(chr(temp))
+
+        if not 32 < temp < 127:
+            break
+
+    print("".join(txt_chrs))
 
 
 def bin_generator(txt_name):
@@ -82,3 +129,4 @@ def bin_generator(txt_name):
 
 if __name__ == "__main__":
     write_image(repeat=False)
+    read_image()
